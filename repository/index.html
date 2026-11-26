@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>somepanic Kodi repository</title>
+    <style>
+      :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+      body { max-width: 44rem; margin: 3rem auto; padding: 0 1.25rem; line-height: 1.6; }
+      a { color: light-dark(#075bb5, #87c5ff); text-underline-offset: .2em; }
+      a:focus-visible { outline: 3px solid currentColor; outline-offset: 4px; }
+      code { overflow-wrap: anywhere; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>somepanic Kodi repository</h1>
+      <p>SiloMod, JellyMod, Plex Uno, PlexMod and CoreTube for Kodi 21 and 22, updated from their own releases.</p>
+      <p><a href="{{repository_zip}}">{{repository_zip}}</a></p>
+      <h2>Install in Kodi</h2>
+      <ol>
+        <li>Open <strong>Settings → System → Add-ons</strong> and turn on <strong>Unknown sources</strong>.</li>
+        <li>Open <strong>Settings → File manager → Add source</strong>, enter
+          <code>https://somepanic.github.io/</code> and name it <strong>somepanic</strong>.</li>
+        <li>Open <strong>Add-ons → Install from zip file → somepanic</strong> and choose the repository zip.</li>
+        <li>Open <strong>Add-ons → Install from repository → somepanic</strong> and pick an add-on.
+          Kodi reads the list for its own version.</li>
+      </ol>
+      <h2>In the repository</h2>
+{{feeds}}
+      <p><a href="https://github.com/somepanic/somepanic.github.io">Source and help</a></p>
+    </main>
+  </body>
+</html>
