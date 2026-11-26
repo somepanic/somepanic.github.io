@@ -4,9 +4,11 @@ repository/addon.xml: which feed each Kodi reads. Kodi 21 (CoreELEC 21, 32-bit A
 21.90+ pre-releases (CoreELEC 22, AArch64) get piers/, each checked by sha256.
 """
 
+import json
 import unittest
 import xml.etree.ElementTree as ET
 
+from collect_zips import SOURCES
 from kodirepo import compare_versions
 
 from .helpers import REPO
@@ -45,6 +47,16 @@ class RepositoryAddonTest(unittest.TestCase):
             self.assertEqual(folder.findtext('checksum'), base + 'addons.xml.sha256')
             self.assertEqual(folder.find('checksum').get('verify'), 'sha256')
             self.assertEqual(folder.findtext('hashes'), 'sha256')
+
+    def test_the_page_describes_every_addon_the_repository_collects(self):
+        catalog = json.loads((REPO / 'repository' / 'addons.json').read_text(encoding='utf-8'))
+
+        self.assertEqual(set(catalog), {source['id'] for source in SOURCES})
+        for addon_id, entry in catalog.items():
+            self.assertEqual(set(entry), {'name', 'about', 'home', 'kind'}, addon_id)
+            self.assertIn(entry['kind'], ('addon', 'skin'), addon_id)
+            self.assertTrue(entry['home'].startswith('https://github.com/'), addon_id)
+            self.assertTrue(entry['about'].endswith('.'), addon_id)
 
     def test_its_icon_is_there(self):
         icon = ADDON.findtext("extension[@point='xbmc.addon.metadata']/assets/icon")

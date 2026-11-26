@@ -1,0 +1,86 @@
+{
+  "script.silomod": {
+    "name": "SiloMod (SM4K)",
+    "about": "Browse and play your Silo server.",
+    "home": "https://github.com/somepanic/SM4K",
+    "kind": "addon"
+  },
+  "script.jellymod": {
+    "name": "JellyMod (JM4K)",
+    "about": "Browse and play your Jellyfin server.",
+    "home": "https://github.com/somepanic/JM4K",
+    "kind": "addon"
+  },
+  "script.plexmod-uno": {
+    "name": "Plex Uno",
+    "about": "FilHarr's reworked PlexMod: browse and play your Plex server.",
+    "home": "https://github.com/FilHarr/plex-for-kodi",
+    "kind": "addon"
+  },
+  "script.plexmod": {
+    "name": "PlexMod for Kodi (PM4K)",
+    "about": "pannal's Plex client for Kodi.",
+    "home": "https://github.com/pannal/plex-for-kodi",
+    "kind": "addon"
+  },
+  "browser.tizentube": {
+    "name": "CoreTube",
+    "about": "YouTube's TV app on CoreELEC boxes with Amlogic chips.",
+    "home": "https://github.com/somepanic/CoreTube",
+    "kind": "addon"
+  },
+  "script.pm4k.loguploader": {
+    "name": "Log uploader",
+    "about": "Uploads your Kodi log with passwords and tokens hidden, and gives you a link to share.",
+    "home": "https://github.com/somepanic/script.pm4k.loguploader",
+    "kind": "addon"
+  },
+  "script.mcfontface": {
+    "name": "McFontFace",
+    "about": "Adds more fonts to Kodi.",
+    "home": "https://github.com/pannal/dontpanickodi",
+    "kind": "addon"
+  },
+  "skin.plextuary-uno": {
+    "name": "Plextuary Uno",
+    "about": "Kodi's Estuary skin, modded for Plex Uno, SiloMod and JellyMod.",
+    "home": "https://github.com/FilHarr/maybepanic",
+    "kind": "skin"
+  },
+  "skin.plextuaryce-uno": {
+    "name": "Plextuary CoreELEC Uno",
+    "about": "Plextuary Uno for CoreELEC.",
+    "home": "https://github.com/FilHarr/maybepanic",
+    "kind": "skin"
+  },
+  "skin.plextuarycpm-uno": {
+    "name": "Plextuary CE Custom Builds Uno",
+    "about": "Plextuary Uno for CoreELEC custom builds (U3k, avdvplus, p3i, CPM).",
+    "home": "https://github.com/FilHarr/maybepanic",
+    "kind": "skin"
+  },
+  "skin.plextuary": {
+    "name": "Plextuary",
+    "about": "Kodi's Estuary skin, modded for PlexMod.",
+    "home": "https://github.com/pannal/dontpanickodi",
+    "kind": "skin"
+  },
+  "skin.plextuaryce": {
+    "name": "Plextuary CoreELEC",
+    "about": "Plextuary for CoreELEC.",
+    "home": "https://github.com/pannal/dontpanickodi",
+    "kind": "skin"
+  },
+  "skin.plextuarycpm": {
+    "name": "Plextuary CE Custom Builds",
+    "about": "Plextuary for CoreELEC custom builds.",
+    "home": "https://github.com/pannal/dontpanickodi",
+    "kind": "skin"
+  },
+  "skin.p3i.estuary": {
+    "name": "p3i Estuary",
+    "about": "Kodi's Estuary skin for the p3i CoreELEC build.",
+    "home": "https://github.com/pannal/p3i_repo",
+    "kind": "skin"
+  }
+}

@@ -6,16 +6,28 @@
     <title>somepanic Kodi repository</title>
     <style>
       :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
-      body { max-width: 44rem; margin: 3rem auto; padding: 0 1.25rem; line-height: 1.6; }
+      body { max-width: 48rem; margin: 3rem auto; padding: 0 1.25rem; line-height: 1.6; }
       a { color: light-dark(#075bb5, #87c5ff); text-underline-offset: .2em; }
       a:focus-visible { outline: 3px solid currentColor; outline-offset: 4px; }
       code { overflow-wrap: anywhere; }
+      .table-wrap { overflow-x: auto; }
+      table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+      th, td { padding: .6rem .75rem .6rem 0; text-align: left; vertical-align: top;
+        border-bottom: 1px solid color-mix(in srgb, currentColor 18%, transparent); }
+      thead th { font-size: .9em; white-space: nowrap; }
+      thead th:first-child { width: 58%; }
+      tbody th { font-weight: 600; }
+      .about { display: block; font-weight: normal; font-size: .9em;
+        color: color-mix(in srgb, currentColor 75%, transparent); }
+      .version { font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+      .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden;
+        clip-path: inset(50%); white-space: nowrap; }
     </style>
   </head>
   <body>
     <main>
       <h1>somepanic Kodi repository</h1>
-      <p>SiloMod, JellyMod, Plex Uno, PlexMod, CoreTube and their skins for Kodi 21 and 22, updated from their own releases.</p>
+      <p>Plex, Jellyfin, Silo and YouTube for Kodi 21 and 22 on CoreELEC, from one repository that keeps them up to date.</p>
       <p><a href="{{repository_zip}}">{{repository_zip}}</a></p>
       <h2>Install in Kodi</h2>
       <ol>
@@ -23,12 +35,20 @@
         <li>Open <strong>Settings → File manager → Add source</strong>, enter
           <code>https://somepanic.github.io/</code> and name it <strong>somepanic</strong>.</li>
         <li>Open <strong>Add-ons → Install from zip file → somepanic</strong> and choose the repository zip.</li>
-        <li>Open <strong>Add-ons → Install from repository → somepanic</strong> and pick an add-on.
-          Kodi reads the list for its own version.</li>
+        <li>Open <strong>Add-ons → Install from repository → somepanic</strong> and pick an add-on or skin.</li>
       </ol>
-      <h2>In the repository</h2>
-{{feeds}}
-      <p><a href="https://github.com/somepanic/somepanic.github.io">Source and help</a></p>
+      <p>Kodi reads the list for its own version: Kodi 21 (CoreELEC 21, 32-bit ARM) or Kodi 22 (CoreELEC 22, 64-bit
+        AArch64). Leave automatic updates on to get each new release.</p>
+      <p>Already installed one of these from a zip? Open its add-on information, choose <strong>Versions</strong>, and
+        pick the version from <strong>somepanic</strong> to get updates. Your settings stay in place.</p>
+      <h2>Add-ons</h2>
+{{addons}}
+      <p>CoreTube plays protected videos, such as bought or rented films, only once you add its Widevine libraries:
+        see <a href="https://github.com/somepanic/CoreTube#widevine">CoreTube's Widevine steps</a>.</p>
+      <h2>Skins</h2>
+{{skins}}
+      <p>The lists follow each project's latest release and are checked every 6 hours.
+        <a href="https://github.com/somepanic/somepanic.github.io">Source and help</a></p>
     </main>
   </body>
 </html>

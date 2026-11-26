@@ -7,6 +7,7 @@ repository add-on's zip and a page at the top.
 
 import hashlib
 import json
+import re
 import subprocess
 import sys
 import tempfile
@@ -113,14 +114,47 @@ class BuildTest(unittest.TestCase):
         self.assertEqual(first, again)
 
     def test_the_page_links_the_repository_and_lists_each_feed(self):
+        self.stage('omega', 'script.extra', '1.0.0', addon_zip('script.extra', '1.0.0'))
+
         self.build()
 
         page = (self.site / 'index.html').read_text()
         self.assertIn(f'href="{REPOSITORY_ZIP}"', page)
         self.assertIn('https://somepanic.github.io/', page)
-        self.assertIn('SiloMod (SM4K) 0.1.0', page)
         self.assertNotIn('{{', page)
         self.assertTrue((self.site / '.nojekyll').exists())
+
+        rows = {
+            re.sub(r'<[^>]+>', ' ', row).split()[0]: row
+            for row in re.findall(r'<tr>(.*?)</tr>', page, re.DOTALL)
+            if '<td' in row
+        }
+        silomod = rows['SiloMod']
+        self.assertIn('href="https://github.com/somepanic/SM4K"', silomod)
+        self.assertIn('Browse and play your Silo server.', silomod)
+        self.assertEqual(re.findall(r'<td class="version">(.*?)</td>', silomod), ['0.1.0', '0.1.0'])
+        # an add-on outside repository/addons.json still shows, with the name and summary in its addon.xml
+        self.assertIn('script.extra summary', rows['script.extra'])
+
+    def test_kodi_lists_only_the_repository_zip_from_the_page(self):
+        # Kodi's HTTP source lists a link only when its text is the file name: just the repository zip
+        self.build()
+
+        page = (self.site / 'index.html').read_text()
+        links = re.findall(r'<a href="([^"]*)"[^>]*>\s*(.*?)\s*</a>', page, re.DOTALL)
+        self.assertGreater(len(links), 3)
+        self.assertEqual([href for href, text in links if href == text], [REPOSITORY_ZIP])
+
+    def test_a_list_without_the_addon_says_so(self):
+        self.manifest = [e for e in self.manifest if not (e['feed'] == 'piers' and e['id'] == 'script.silomod')]
+
+        self.build()
+
+        page = (self.site / 'index.html').read_text()
+        silomod = next(row for row in re.findall(r'<tr>(.*?)</tr>', page, re.DOTALL) if 'SiloMod' in row)
+        cells = re.findall(r'<td class="version">(.*?)</td>', silomod, re.DOTALL)
+        self.assertEqual(cells[0], '0.1.0')
+        self.assertIn('not in this list', cells[1])
 
     def test_a_zip_that_disagrees_with_the_manifest_stops_the_build(self):
         self.manifest[0]['version'] = '0.1.1'
