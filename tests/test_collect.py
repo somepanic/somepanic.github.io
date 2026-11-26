@@ -18,6 +18,7 @@ from .helpers import FakeWeb, addon_xml, addon_zip, elf, sums
 API = 'https://api.github.com/repos'
 DONT_PANIC = 'https://raw.githubusercontent.com/pannal/dontpanickodi/master/omega/zips/'
 MAYBE_PANIC = 'https://raw.githubusercontent.com/FilHarr/maybepanic/main/'
+P3I = 'https://raw.githubusercontent.com/pannal/p3i_repo/master/omega/zips/'
 
 
 def release(web, repo, tag, files):
@@ -30,51 +31,62 @@ def release(web, repo, tag, files):
         web.pages[base + name] = data
 
 
-def kodi_feed(web, base, addon_id, zips):
-    """A Kodi repository feed at base listing zips (version: bytes) of addon_id, with addons.xml.md5."""
-    root = ET.Element('addons')
-    for version, data in zips.items():
-        root.append(ET.fromstring(addon_xml(addon_id, version)))
-        web.pages[f'{base}{addon_id}/{addon_id}-{version}.zip'] = data
-    index = ET.tostring(root, encoding='utf-8', xml_declaration=True)
-    web.pages[base + 'addons.xml'] = index
-    web.pages[base + 'addons.xml.md5'] = hashlib.md5(index).hexdigest().encode()
-
-
 class World:
-    """Every source with one release or feed, as they stand."""
+    """Every source as it stands: our releases, and the upstream Kodi feeds with an older version beside the newest."""
 
     def __init__(self):
         self.web = FakeWeb({})
+        self.feeds = {}  # base URL: {add-on ID: {version: zip}}
         self.silomod = addon_zip('script.silomod', '0.1.0', name='SiloMod (SM4K)')
         self.jellymod = addon_zip('script.jellymod', '0.1.0', name='JellyMod (JM4K)')
+        self.loguploader = addon_zip('script.pm4k.loguploader', '2.1.0')
         self.coretube = {
             'arm': addon_zip('browser.tizentube', '0.5.4', extra={'cobalt/cobalt': elf(1, 40)}),
             'aarch64': addon_zip('browser.tizentube', '0.5.4', extra={'cobalt/cobalt': elf(2, 183)}),
         }
-        self.plexmod = addon_zip('script.plexmod', '1.3.19')
-        self.uno = addon_zip('script.plexmod-uno', '0.4.4')
-        release(self.web, 'somepanic/SM4K', 'v0.1.0', {'script.silomod-0.1.0.zip': self.silomod})
-        release(self.web, 'somepanic/JM4K', 'v0.1.0', {'script.jellymod-0.1.0.zip': self.jellymod})
+        release(self.web, 'somepanic/SM4K', 'silomod-v0.1.0', {'script.silomod-0.1.0.zip': self.silomod})
+        release(self.web, 'somepanic/JM4K', 'jellymod-v0.1.0', {'script.jellymod-0.1.0.zip': self.jellymod})
+        release(
+            self.web,
+            'somepanic/script.pm4k.loguploader',
+            'loguploader-v2.1.0',
+            {'script.pm4k.loguploader-2.1.0.zip': self.loguploader},
+        )
         release(
             self.web,
             'somepanic/CoreTube',
             'v0.5.4',
             {f'browser.tizentube-0.5.4-{arch}.zip': data for arch, data in self.coretube.items()},
         )
-        kodi_feed(
-            self.web,
-            DONT_PANIC,
-            'script.plexmod',
-            {'1.0.6-rev1': addon_zip('script.plexmod', '1.0.6-rev1'), '1.3.19': self.plexmod},
-        )
+
+        self.newest = {}  # (base, add-on ID): the newest zip there
+        self.offer(DONT_PANIC, 'script.plexmod', '1.0.6-rev1', '1.3.19')
+        self.offer(DONT_PANIC, 'script.mcfontface', '0.0.9', '0.1.0')
+        for skin in ('skin.plextuary', 'skin.plextuaryce', 'skin.plextuarycpm'):
+            self.offer(DONT_PANIC, skin, '4.0.0-pm4k1.9', '4.0.0-pm4k1.15', gui='5.17.0')
+        self.offer(P3I, 'skin.p3i.estuary', '8.8.9', '8.8.25', gui='5.17.0')
         for feed in ('zips/', 'piers/zips/'):
-            kodi_feed(
-                self.web,
-                MAYBE_PANIC + feed,
-                'script.plexmod-uno',
-                {'0.4.3': addon_zip('script.plexmod-uno', '0.4.3'), '0.4.4': self.uno},
-            )
+            self.offer(MAYBE_PANIC + feed, 'script.plexmod-uno', '0.4.3', '0.4.4')
+        self.offer(MAYBE_PANIC + 'zips/', 'skin.plextuary-uno', '0.1.1', '0.1.2', gui='5.17.0')
+        self.offer(MAYBE_PANIC + 'piers/zips/', 'skin.plextuary-uno', '22.0.0', '22.0.1', gui='5.18.0')
+        for skin in ('skin.plextuaryce-uno', 'skin.plextuarycpm-uno'):
+            self.offer(MAYBE_PANIC + 'zips/', skin, '0.1.2', '0.1.3', gui='5.17.0')
+        for base, addons in self.feeds.items():
+            root = ET.Element('addons')
+            for addon_id, versions in addons.items():
+                for version in versions:
+                    root.append(ET.fromstring(addon_xml(addon_id, version)))
+            index = ET.tostring(root, encoding='utf-8', xml_declaration=True)
+            self.web.pages[base + 'addons.xml'] = index
+            self.web.pages[base + 'addons.xml.md5'] = hashlib.md5(index).hexdigest().encode()
+
+    def offer(self, base, addon_id, *versions, gui=None):
+        """addon_id's versions in the Kodi feed at base, the last one the newest."""
+        for version in versions:
+            data = addon_zip(addon_id, version, gui=gui)
+            self.feeds.setdefault(base, {}).setdefault(addon_id, {})[version] = data
+            self.web.pages[f'{base}{addon_id}/{addon_id}-{version}.zip'] = data
+        self.newest[(base, addon_id)] = self.feeds[base][addon_id][versions[-1]]
 
 
 class CollectTest(unittest.TestCase):
@@ -91,26 +103,51 @@ class CollectTest(unittest.TestCase):
         manifest = json.loads((self.staging / 'manifest.json').read_text())
         return {(entry['feed'], entry['id']): entry for entry in manifest}
 
-    def test_the_newest_of_every_addon_for_both_feeds(self):
+    def test_each_list_gets_what_its_kodi_is_offered_upstream(self):
         self.collect()
 
         staged = self.staged()
+        world = self.world
+        both = {
+            'script.silomod': ('0.1.0', world.silomod),
+            'script.jellymod': ('0.1.0', world.jellymod),
+            'script.pm4k.loguploader': ('2.1.0', world.loguploader),
+            'script.plexmod': ('1.3.19', world.newest[(DONT_PANIC, 'script.plexmod')]),
+            'script.mcfontface': ('0.1.0', world.newest[(DONT_PANIC, 'script.mcfontface')]),
+            'skin.plextuary': ('4.0.0-pm4k1.15', world.newest[(DONT_PANIC, 'skin.plextuary')]),
+            'skin.plextuaryce': ('4.0.0-pm4k1.15', world.newest[(DONT_PANIC, 'skin.plextuaryce')]),
+            'skin.plextuarycpm': ('4.0.0-pm4k1.15', world.newest[(DONT_PANIC, 'skin.plextuarycpm')]),
+            'skin.p3i.estuary': ('8.8.25', world.newest[(P3I, 'skin.p3i.estuary')]),
+        }
         expected = {
-            'script.silomod': ('0.1.0', self.world.silomod),
-            'script.jellymod': ('0.1.0', self.world.jellymod),
-            'script.plexmod': ('1.3.19', self.world.plexmod),
-            'script.plexmod-uno': ('0.4.4', self.world.uno),
+            'omega': dict(
+                both,
+                **{
+                    'script.plexmod-uno': ('0.4.4', world.newest[(MAYBE_PANIC + 'zips/', 'script.plexmod-uno')]),
+                    'skin.plextuary-uno': ('0.1.2', world.newest[(MAYBE_PANIC + 'zips/', 'skin.plextuary-uno')]),
+                    'skin.plextuaryce-uno': ('0.1.3', world.newest[(MAYBE_PANIC + 'zips/', 'skin.plextuaryce-uno')]),
+                    'skin.plextuarycpm-uno': ('0.1.3', world.newest[(MAYBE_PANIC + 'zips/', 'skin.plextuarycpm-uno')]),
+                },
+            ),
+            'piers': dict(
+                both,
+                **{
+                    'script.plexmod-uno': ('0.4.4', world.newest[(MAYBE_PANIC + 'piers/zips/', 'script.plexmod-uno')]),
+                    'skin.plextuary-uno': ('22.0.1', world.newest[(MAYBE_PANIC + 'piers/zips/', 'skin.plextuary-uno')]),
+                },
+            ),
         }
         for feed, arch, platform in (('omega', 'arm', 'linux'), ('piers', 'aarch64', 'linux-aarch64')):
-            for addon_id, (version, data) in expected.items():
+            for addon_id, (version, data) in expected[feed].items():
                 entry = staged[(feed, addon_id)]
-                self.assertEqual(entry['version'], version)
+                self.assertEqual(entry['version'], version, (feed, addon_id))
                 self.assertIsNone(entry['platform'])
-                self.assertEqual((self.staging / entry['file']).read_bytes(), data)
+                self.assertEqual((self.staging / entry['file']).read_bytes(), data, (feed, addon_id))
             coretube = staged[(feed, 'browser.tizentube')]
             self.assertEqual((coretube['version'], coretube['platform']), ('0.5.4', platform))
-            self.assertEqual((self.staging / coretube['file']).read_bytes(), self.world.coretube[arch])
-        self.assertEqual(len(staged), 10)
+            self.assertEqual((self.staging / coretube['file']).read_bytes(), world.coretube[arch])
+            listed = {addon_id for list_feed, addon_id in staged if list_feed == feed}
+            self.assertEqual(listed, set(expected[feed]) | {'browser.tizentube'}, feed)
 
     def test_the_token_goes_only_to_the_github_api(self):
         self.collect(token='SECRET')
@@ -138,7 +175,7 @@ class CollectTest(unittest.TestCase):
         self.assertIn(('omega', 'script.jellymod'), self.staged())
 
     def test_a_zip_that_fails_its_checksum_stops_the_run(self):
-        url = 'https://github.com/somepanic/JM4K/releases/download/v0.1.0/script.jellymod-0.1.0.zip'
+        url = 'https://github.com/somepanic/JM4K/releases/download/jellymod-v0.1.0/script.jellymod-0.1.0.zip'
         self.world.web.pages[url] = addon_zip('script.jellymod', '0.1.0', name='tampered')
 
         with self.assertRaisesRegex(collect.CollectError, 'script.jellymod-0.1.0.zip'):

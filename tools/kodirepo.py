@@ -10,6 +10,10 @@ import zipfile
 # piers for Kodi 22 and its 21.90+ pre-releases (CoreELEC 22, AArch64). repository/addon.xml sends each Kodi to its feed.
 FEEDS = ('omega', 'piers')
 
+# Per list, the skin engine (xbmc.gui) versions its Kodi loads, oldest first: addons/xbmc.gui/addon.xml in Kodi's
+# sources says Kodi 21 is 5.17.0 (backwards-compatible to 5.17.0), Kodi 22 is 5.18.0 (backwards-compatible to 5.17.0).
+SKIN_ENGINES = {'omega': ('5.17.0', '5.17.0'), 'piers': ('5.17.0', '5.18.0')}
+
 # Kodi's version rules, from xbmc/addons/AddonVersion.cpp: [epoch:]upstream[-revision], letters in any case
 VALID_CHARACTERS = frozenset('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.+_@~')
 DIGITS = frozenset('0123456789')

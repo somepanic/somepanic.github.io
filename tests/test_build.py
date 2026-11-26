@@ -141,6 +141,19 @@ class BuildTest(unittest.TestCase):
         with self.assertRaisesRegex(build.BuildError, 'index.html'):
             self.build()
 
+    def test_each_list_takes_only_skins_its_kodi_can_load(self):
+        # Kodi 21's skin engine is xbmc.gui 5.17.0; Kodi 22's is 5.18.0 and still loads 5.17.0 skins
+        self.stage('piers', 'skin.for21', '1.0.0', addon_zip('skin.for21', '1.0.0', gui='5.17.0'))
+        self.stage('omega', 'skin.for22', '22.0.0', addon_zip('skin.for22', '22.0.0', gui='5.18.0'))
+
+        with self.assertRaisesRegex(build.BuildError, r'omega: skin\.for22 needs xbmc\.gui 5\.18\.0'):
+            self.build()
+
+        self.manifest = [entry for entry in self.manifest if entry['id'] != 'skin.for22']
+        self.site = Path(self.tmp.name) / 'second'
+        self.build()
+        self.assertIn('skin.for21', self.feed('piers')[1])
+
     def test_the_site_starts_empty(self):
         self.site.mkdir()
 

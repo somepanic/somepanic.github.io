@@ -13,10 +13,12 @@ import collect_zips
 REPO = Path(__file__).resolve().parent.parent
 
 
-def addon_xml(addon_id, version, name=None, platform='all', assets=('resources/icon.png',), path=None):
+def addon_xml(addon_id, version, name=None, platform='all', assets=('resources/icon.png',), path=None, gui=None):
     root = ET.Element('addon', {'id': addon_id, 'name': name or addon_id, 'version': version, 'provider-name': 'test'})
     requires = ET.SubElement(root, 'requires')
     ET.SubElement(requires, 'import', addon='xbmc.python', version='3.0.0')
+    if gui:  # a skin: the skin engine it was made for
+        ET.SubElement(requires, 'import', addon='xbmc.gui', version=gui)
     ET.SubElement(root, 'extension', point='xbmc.python.script', library='default.py')
     metadata = ET.SubElement(root, 'extension', point='xbmc.addon.metadata')
     ET.SubElement(metadata, 'summary').text = f'{addon_id} summary'
@@ -30,11 +32,13 @@ def addon_xml(addon_id, version, name=None, platform='all', assets=('resources/i
     return ET.tostring(root, encoding='utf-8', xml_declaration=True)
 
 
-def addon_zip(addon_id, version, name=None, platform='all', assets=('resources/icon.png',), extra=None, path=None):
+def addon_zip(
+    addon_id, version, name=None, platform='all', assets=('resources/icon.png',), extra=None, path=None, gui=None
+):
     """An add-on zip as Kodi expects it: one top folder named after the add-on."""
     buffer = io.BytesIO()
     with zipfile.ZipFile(buffer, 'w') as z:
-        z.writestr(f'{addon_id}/addon.xml', addon_xml(addon_id, version, name, platform, assets, path))
+        z.writestr(f'{addon_id}/addon.xml', addon_xml(addon_id, version, name, platform, assets, path, gui))
         for asset in assets:
             z.writestr(f'{addon_id}/{asset}', f'art of {addon_id} {asset}'.encode())
         for name_in_zip, data in (extra or {}).items():

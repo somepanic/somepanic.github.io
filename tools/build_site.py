@@ -22,7 +22,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from kodirepo import FEEDS, AddonError, read_addon
+from kodirepo import FEEDS, SKIN_ENGINES, AddonError, compare_versions, read_addon
 
 SOURCE = Path(__file__).resolve().parent.parent / 'repository'
 REPOSITORY_ID = 'repository.somepanic'
@@ -80,6 +80,15 @@ def add_addon(entry, data, feed_dir):
         addon = read_addon(data, addon_id, entry['version'], entry['file'])
     except AddonError as error:
         raise BuildError(str(error)) from error
+    feed = feed_dir.name
+    for need in addon.iter('import'):
+        if need.get('addon') == 'xbmc.gui':
+            oldest, newest = SKIN_ENGINES[feed]
+            version = need.get('version') or '0'
+            if compare_versions(version, oldest) < 0 or compare_versions(version, newest) > 0:
+                raise BuildError(
+                    f'{feed}: {addon_id} needs xbmc.gui {version}, and Kodi there loads {oldest} to {newest}'
+                )
     metadata = addon.find("extension[@point='xbmc.addon.metadata']")
     if metadata is not None:
         for path in metadata.findall('path'):  # Kodi would fetch the zip from there, not from <id>/<id>-<version>.zip

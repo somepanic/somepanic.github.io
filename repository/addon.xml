@@ -17,8 +17,8 @@
     </dir>
   </extension>
   <extension point="xbmc.addon.metadata">
-    <summary lang="en_GB">SiloMod, JellyMod, Plex Uno, PlexMod and CoreTube for Kodi 21 and 22</summary>
-    <description lang="en_GB">Installs and updates SiloMod (SM4K), JellyMod (JM4K), Plex Uno, PlexMod for Kodi (PM4K) and CoreTube. Kodi picks the feed for its version: Kodi 21 (CoreELEC 21, 32-bit ARM) or Kodi 22 (CoreELEC 22, AArch64).</description>
+    <summary lang="en_GB">SiloMod, JellyMod, Plex Uno, PlexMod, CoreTube and their skins for Kodi 21 and 22</summary>
+    <description lang="en_GB">Installs and updates SiloMod (SM4K), JellyMod (JM4K), Plex Uno, PlexMod for Kodi (PM4K), CoreTube, their Plextuary and p3i skins and the log uploader. Kodi picks the feed for its version: Kodi 21 (CoreELEC 21, 32-bit ARM) or Kodi 22 (CoreELEC 22, AArch64).</description>
     <license>BSD-3-Clause</license>
     <platform>all</platform>
     <website>https://somepanic.github.io/</website>

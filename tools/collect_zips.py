@@ -5,8 +5,8 @@ Collect the newest zip of every add-on the somepanic repository publishes, check
     python3 tools/collect_zips.py STAGING
 
 Our own add-ons come from their latest GitHub release (a zip, or one per architecture, and SHA256SUMS). PlexMod for
-Kodi (PM4K) and Plex Uno come unchanged from the Kodi repositories their authors publish (Don't Panic, Maybe Panic),
-checked against those feeds' addons.xml.md5. STAGING (new) gets the zips and manifest.json, which tools/build_site.py reads.
+Kodi (PM4K), Plex Uno and their skins come unchanged from the Kodi repositories their authors publish (Don't Panic,
+Maybe Panic, p3i), checked against those feeds' addons.xml.md5. STAGING (new) gets the zips and manifest.json, which tools/build_site.py reads.
 With GITHUB_TOKEN set, it goes to GitHub's API, and nowhere else.
 """
 
@@ -31,18 +31,38 @@ from kodirepo import FEEDS, AddonError, newest, read_addon
 API = 'https://api.github.com'
 USER_AGENT = 'somepanic-kodi-repository'
 DONT_PANIC = 'https://raw.githubusercontent.com/pannal/dontpanickodi/master/omega/zips/'  # Kodi 20.90 and newer
-MAYBE_PANIC = 'https://raw.githubusercontent.com/FilHarr/maybepanic/main/'
+P3I = 'https://raw.githubusercontent.com/pannal/p3i_repo/master/omega/zips/'  # Kodi 20.90 and newer
+MAYBE_PANIC = 'https://raw.githubusercontent.com/FilHarr/maybepanic/main/'  # zips/: Kodi 21, piers/zips/: Kodi 22
 
 # per feed: the architecture a per-architecture release ships for it, its launcher's ELF class and machine
 # (ARM 40, AArch64 183), and the platform Kodi knows it by (CoreELEC 21's 32-bit Kodi has no linux-armv7)
 ARCHITECTURES = {'omega': ('arm', 1, 40, 'linux'), 'piers': ('aarch64', 2, 183, 'linux-aarch64')}
 
+# Our add-ons come from their releases. An upstream add-on goes into each list its own repository offers that Kodi:
+# Don't Panic and p3i serve Kodi 20.90 and newer from one feed, Maybe Panic has a feed for Kodi 21 and one for Kodi 22.
+BOTH_FROM_DONT_PANIC = {'omega': DONT_PANIC, 'piers': DONT_PANIC}
+BOTH_FROM_P3I = {'omega': P3I, 'piers': P3I}
+BOTH_FROM_MAYBE_PANIC = {'omega': MAYBE_PANIC + 'zips/', 'piers': MAYBE_PANIC + 'piers/zips/'}
+KODI_21_FROM_MAYBE_PANIC = {'omega': MAYBE_PANIC + 'zips/'}
+
 SOURCES = (
     {'id': 'script.silomod', 'release': 'somepanic/SM4K'},
     {'id': 'script.jellymod', 'release': 'somepanic/JM4K'},
+    {'id': 'script.pm4k.loguploader', 'release': 'somepanic/script.pm4k.loguploader'},
     {'id': 'browser.tizentube', 'release': 'somepanic/CoreTube', 'launcher': 'cobalt/cobalt'},
-    {'id': 'script.plexmod', 'feeds': {'omega': DONT_PANIC, 'piers': DONT_PANIC}},
-    {'id': 'script.plexmod-uno', 'feeds': {'omega': MAYBE_PANIC + 'zips/', 'piers': MAYBE_PANIC + 'piers/zips/'}},
+    {'id': 'script.plexmod', 'feeds': BOTH_FROM_DONT_PANIC},
+    {'id': 'script.mcfontface', 'feeds': BOTH_FROM_DONT_PANIC},
+    {'id': 'skin.plextuary', 'feeds': BOTH_FROM_DONT_PANIC},
+    {'id': 'skin.plextuaryce', 'feeds': BOTH_FROM_DONT_PANIC},
+    {'id': 'skin.plextuarycpm', 'feeds': BOTH_FROM_DONT_PANIC},
+    {
+        'id': 'skin.p3i.estuary',
+        'feeds': BOTH_FROM_P3I,
+    },  # p3i's own Python and binary builds stay out: p3i firmware only
+    {'id': 'script.plexmod-uno', 'feeds': BOTH_FROM_MAYBE_PANIC},
+    {'id': 'skin.plextuary-uno', 'feeds': BOTH_FROM_MAYBE_PANIC},
+    {'id': 'skin.plextuaryce-uno', 'feeds': KODI_21_FROM_MAYBE_PANIC},
+    {'id': 'skin.plextuarycpm-uno', 'feeds': KODI_21_FROM_MAYBE_PANIC},
 )
 
 
@@ -137,10 +157,9 @@ def from_release(source, downloads, token):
 
 
 def from_feeds(source, downloads):
-    """{feed: (version, zip bytes, None, origin)}: the newest source['id'] in each upstream Kodi feed."""
+    """{feed: (version, zip bytes, None, origin)}: the newest source['id'] in the upstream Kodi feed for each list."""
     found = {}
-    for feed in FEEDS:
-        base = source['feeds'][feed]
+    for feed, base in source['feeds'].items():
         index = downloads.get(base + 'addons.xml')
         expected = downloads.get(base + 'addons.xml.md5').decode('ascii', 'replace').split()
         if not expected or hashlib.md5(index).hexdigest() != expected[0].lower():
