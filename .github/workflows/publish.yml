@@ -1,0 +1,58 @@
+name: Publish the Kodi repository
+
+on:
+  push:
+    branches: [main]
+  pull_request:  # tests, collects and builds; only main deploys
+  schedule:
+    - cron: '23 */6 * * *'  # every 6 hours: new releases and new upstream versions
+  workflow_dispatch:
+  repository_dispatch:
+    types: [addon-released]
+
+permissions:
+  contents: read
+  pages: read
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the tools
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Test the tools
+        run: python3 -m unittest discover -s tests -t . -b
+      - name: Collect the newest add-on zips
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 tools/collect_zips.py staging
+      - name: Build the site
+        run: python3 tools/build_site.py staging site
+      - name: Configure Pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d  # v6.0.0
+      - name: Upload the site
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9  # v5.0.0
+        with:
+          path: site
+          include-hidden-files: true
+
+  deploy:
+    needs: build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346  # v5.0.1

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<addon id="repository.somepanic" name="somepanic" version="1.0.0" provider-name="somepanic">
+  <extension point="xbmc.addon.repository" name="somepanic">
+    <!-- Kodi 21 Omega: CoreELEC 21 (32-bit ARM) -->
+    <dir minversion="21.0.0" maxversion="21.89.999">
+      <info>https://somepanic.github.io/omega/addons.xml</info>
+      <checksum verify="sha256">https://somepanic.github.io/omega/addons.xml.sha256</checksum>
+      <datadir>https://somepanic.github.io/omega/</datadir>
+      <hashes>sha256</hashes>
+    </dir>
+    <!-- Kodi 22 Piers and its 21.90+ pre-releases: CoreELEC 22 (AArch64) -->
+    <dir minversion="21.90.0" maxversion="22.89.999">
+      <info>https://somepanic.github.io/piers/addons.xml</info>
+      <checksum verify="sha256">https://somepanic.github.io/piers/addons.xml.sha256</checksum>
+      <datadir>https://somepanic.github.io/piers/</datadir>
+      <hashes>sha256</hashes>
+    </dir>
+  </extension>
+  <extension point="xbmc.addon.metadata">
+    <summary lang="en_GB">SiloMod, JellyMod, Plex Uno, PlexMod, CoreTube and their skins for Kodi 21 and 22</summary>
+    <description lang="en_GB">Installs and updates SiloMod (SM4K), JellyMod (JM4K), Plex Uno, PlexMod for Kodi (PM4K), CoreTube, their Plextuary and p3i skins and the log uploader. Kodi picks the feed for its version: Kodi 21 (CoreELEC 21, 32-bit ARM) or Kodi 22 (CoreELEC 22, AArch64).</description>
+    <license>BSD-3-Clause</license>
+    <platform>all</platform>
+    <website>https://somepanic.github.io/</website>
+    <source>https://github.com/somepanic/somepanic.github.io</source>
+    <assets>
+      <icon>resources/icon.png</icon>
+    </assets>
+  </extension>
+</addon>
