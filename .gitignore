@@ -1,0 +1,6 @@
+__pycache__/
+/staging/
+/site/
+.claude/
+CLAUDE.md
+AGENTS.md
