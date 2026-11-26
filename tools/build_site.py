@@ -26,7 +26,8 @@ from kodirepo import FEEDS, SKIN_ENGINES, AddonError, compare_versions, read_add
 
 SOURCE = Path(__file__).resolve().parent.parent / 'repository'
 REPOSITORY_ID = 'repository.somepanic'
-FEED_NAMES = {'omega': 'Kodi 21, CoreELEC 21 (32-bit ARM)', 'piers': 'Kodi 22, CoreELEC 22 (64-bit AArch64)'}
+COLUMNS = {'omega': 'Kodi 21', 'piers': 'Kodi 22'}
+NOT_LISTED = '<span aria-hidden="true">–</span><span class="visually-hidden">not in this list</span>'
 # what an add-on without <assets> shows (Kodi's defaults before <assets>)
 LEGACY_ART = ('icon.png', 'fanart.jpg')
 
@@ -115,16 +116,52 @@ def add_addon(entry, data, feed_dir):
     return addon
 
 
+def table(heading, rows):
+    head = ''.join(f'<th scope="col">{COLUMNS[feed]}</th>' for feed in FEEDS)
+    body = '\n'.join(f'          {row}' for row in rows)
+    return (
+        '      <div class="table-wrap">\n        <table>\n'
+        f'          <thead><tr><th scope="col">{heading}</th>{head}</tr></thead>\n'
+        f'          <tbody>\n{body}\n          </tbody>\n'
+        '        </table>\n      </div>'
+    )
+
+
 def page(repository_zip_name, listing):
-    sections = []
+    """index.html: the repository zip, then a table of the add-ons and one of the skins, with each one's version in
+    each list. Names, descriptions and links come from repository/addons.json, or else from the add-on's addon.xml."""
+    catalog = json.loads((SOURCE / 'addons.json').read_text(encoding='utf-8'))
+    found = {}
     for feed in FEEDS:
-        items = ''.join(
-            f'\n          <li>{html.escape(name)} {html.escape(version)}</li>' for name, version in listing[feed]
+        for addon_id, (name, summary, _) in listing[feed].items():
+            found.setdefault(addon_id, (name, summary))
+    order = [addon_id for addon_id in catalog if addon_id in found] + sorted(set(found) - set(catalog))
+
+    rows = {'addon': [], 'skin': []}
+    for addon_id in order:
+        name, summary = found[addon_id]
+        entry = catalog.get(addon_id) or {
+            'name': name,
+            'about': summary,
+            'home': None,
+            'kind': 'skin' if addon_id.startswith('skin.') else 'addon',
+        }
+        title = html.escape(entry['name'])
+        if entry['home']:
+            title = f'<a href="{html.escape(entry["home"])}">{title}</a>'
+        cells = ''.join(
+            f'<td class="version">{html.escape(listing[feed][addon_id][2]) if addon_id in listing[feed] else NOT_LISTED}</td>'
+            for feed in FEEDS
         )
-        sections.append(f'        <h3>{html.escape(FEED_NAMES[feed])}</h3>\n        <ul>{items}\n        </ul>')
+        rows[entry['kind']].append(
+            f'<tr><th scope="row">{title}<span class="about">{html.escape(entry["about"])}</span></th>{cells}</tr>'
+        )
+
     template = (SOURCE / 'index.html').read_text(encoding='utf-8')
-    return template.replace('{{repository_zip}}', html.escape(repository_zip_name)).replace(
-        '{{feeds}}', '\n'.join(sections)
+    return (
+        template.replace('{{repository_zip}}', html.escape(repository_zip_name))
+        .replace('{{addons}}', table('Add-on', rows['addon']))
+        .replace('{{skins}}', table('Skin', rows['skin']))
     )
 
 
@@ -146,11 +183,15 @@ def build(staging, site):
         for addon_id in {addon_id for addon_id in ids if ids.count(addon_id) > 1}:
             raise BuildError(f'{feed}: {addon_id} is staged more than once')
         index = ET.Element('addons')
-        listing[feed] = []
+        listing[feed] = {}
         for entry in entries:
             addon = add_addon(entry, (staging / entry['file']).read_bytes(), feed_dir)
             index.append(addon)
-            listing[feed].append((addon.get('name') or entry['id'], entry['version']))
+            metadata = addon.find("extension[@point='xbmc.addon.metadata']")
+            summary = ''
+            if metadata is not None:
+                summary = (metadata.findtext("summary[@lang='en_GB']") or metadata.findtext('summary') or '').strip()
+            listing[feed][entry['id']] = (addon.get('name') or entry['id'], summary, entry['version'])
         index.append(ET.fromstring(addon_xml))
         write_with_sha256(feed_dir / REPOSITORY_ID / repository_name, repository_data)
         icon = feed_dir / REPOSITORY_ID / 'resources' / 'icon.png'

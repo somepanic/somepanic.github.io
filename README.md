@@ -51,7 +51,8 @@ workflow by hand to wake it.
 
 ## Change it
 
-- **Add an add-on:** add it to `SOURCES` in [collect_zips.py](tools/collect_zips.py).
+- **Add an add-on:** add it to `SOURCES` in [collect_zips.py](tools/collect_zips.py), and give it a name, a one-line
+  description and a link in [repository/addons.json](repository/addons.json), which the page shows.
 - **Change the repository add-on** (its lists or its icon): edit [repository/addon.xml](repository/addon.xml) and raise
   its version, so Kodi updates it.
 - **Try it on your computer:**
